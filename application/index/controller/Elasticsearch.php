@@ -43,7 +43,7 @@ class Elasticsearch extends Controller
     //插入数据
     public function insert()
     {
-        $arr = Db::table("small_program")->limit(1000)->select();
+        $arr = Db::table("small_program")->limit(50)->select();
         $count = count($arr);
         $params = ['body' => []];
         foreach ($arr as $k => $v) {
@@ -56,11 +56,11 @@ class Elasticsearch extends Controller
                 ]
             ];
             $params ['body'][] = $v;
-            if ($k % 1000 == 0) {
+//            if ($k % 1000 == 0) {
                 $responses = $this->es->bulk($params);
-                $params = ['body' => []];
-                unset($responses);
-            }
+//                $params = ['body' => []];
+//                unset($responses);
+//            }
         }
 //        for ($i = 1; $i < $count; $i++) {
 //            $params['body'][] = [
@@ -87,9 +87,9 @@ class Elasticsearch extends Controller
 //                unset($responses);
 //            }
 //        }
-        if (!empty($params['body'])) {
-            $this->es->bulk($params);
-        }
+//        if (!empty($params['body'])) {
+//            $this->es->bulk($params);
+//        }
     }
 
     //查询数据
