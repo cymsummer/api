@@ -17,6 +17,16 @@ use think\cache\driver\Redis;
 
 class Program extends Controller
 {
+    public $es;
+
+    public function _initialize()
+    {
+        //host数组可配置多个节点
+        $params = array(
+            'www.rw.com:9200'
+        );
+        $this->es = \Elasticsearch\ClientBuilder::create()->setHosts($params)->build();
+    }
     //数据展示
     public function index()
     {
@@ -39,7 +49,10 @@ class Program extends Controller
         $category = Db::table("small_program_category")->where("category_type", $where)->field('id,category_name')->select();
         //获取文章id
         if ($act == "hot") {
-            $arr = Db::table("small_program")->where("program_style=" . $where  .$cate_where)->field("id,program_title,program_subtitle,program_icon,program_audit_status")->page($page, 24)->order("program_see_num desc,release_time desc")->select();
+            $es=new Elasticsearch;
+            $arr=$es->select($where,$cate,"24",$page);
+            print_r($arr);die;
+           // $arr = Db::table("small_program")->where("program_style=" . $where  .$cate_where)->field("id,program_title,program_subtitle,program_icon,program_audit_status")->page($page, 24)->order("program_see_num desc,release_time desc")->select();
         } elseif ($act == "new") {
             $arr = Db::table("small_program")->where("program_style=" . $where  .$cate_where)->field("id,program_title,program_subtitle,program_icon,program_audit_status")->page($page, 24)->order("release_time desc")->select();
         }
