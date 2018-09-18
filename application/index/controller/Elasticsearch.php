@@ -43,7 +43,7 @@ class Elasticsearch extends Controller
     //插入数据
     public function insert()
     {
-        $arr = Db::table("small_program")->select();
+        $arr = Db::table("small_program")->limit(1000)->select();
         $count = count($arr);
         $params = ['body' => []];
         foreach ($arr as $k => $v) {
