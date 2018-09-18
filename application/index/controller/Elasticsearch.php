@@ -19,7 +19,7 @@ class Elasticsearch extends Controller
     {
         //host数组可配置多个节点
         $params = array(
-            '39.106.20.103:9200/'
+            '39.106.20.103:9200'
         );
         $this->es = \Elasticsearch\ClientBuilder::create()->setHosts($params)->build();
     }
@@ -128,6 +128,6 @@ class Elasticsearch extends Controller
         $params = [
             'index' => 'program'
         ];
-        $res = $this->es->indices()->delete($params);
+        $this->es->indices()->delete($params);
     }
 }
