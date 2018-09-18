@@ -37,3 +37,10 @@ Route::rule('rmtoken','index/Auth/deltoken');
 //=============清除缓存===========
 Route::get('clear','index/Clear/index');
 
+
+//============elasticsearch=============
+Route::get('es_create',"index/Elasticsearch/create");
+Route::get('es_insert',"index/Elasticsearch/insert");
+Route::get('es_select',"index/Elasticsearch/select");
+Route::get('es_delete',"index/Elasticsearch/delete");
+
