@@ -23,7 +23,7 @@ class Program extends Controller
     {
         //host数组可配置多个节点
         $params = array(
-            '39.106.20.103:9200'
+            '127.0.0.1:9200'
         );
         $this->es = \Elasticsearch\ClientBuilder::create()->setHosts($params)->build();
     }
