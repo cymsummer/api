@@ -43,8 +43,7 @@ class Elasticsearch extends Controller
     //插入数据
     public function insert()
     {
-        $arr = Db::table("small_program")->limit(50)->select();
-        $count = count($arr);
+        $arr = Db::table("small_program")->field("id,program_style,program_category_id,program_see_num,program_title,program_subtitle,program_icon,program_audit_status")->select();
         $params = ['body' => []];
         foreach ($arr as $k => $v) {
             //print_r($v);die;
@@ -107,18 +106,17 @@ class Elasticsearch extends Controller
                             ["term" => ['program_category_id' => $cate]]
                         ]
                     ]
-                ]
-            ],
-            "size" => $page_size,
-            "from" => $page,
-            'sort' => [
-                'release_time' => ["order"=>'desc']
+                ],
+                "sort"=>[["program_see_num"=>["order"=>"desc"]],["id"=>["order"=>"asc"]]],
+                "from" => $page,
+                "size" => $page_size,
             ]
         ];
+        $lists=[];
         $res = $this->es->search($params)['hits'];
-        $lists = array_column($res['hits'], '_source');
-//        print_r($lists);
-//        die;
+        $lists["amount"]=$res["total"];
+        $lists["current_page"]=$page+1;
+        $lists["data"] = array_column($res["hits"], '_source');
         return $lists;
     }
 

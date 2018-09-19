@@ -23,7 +23,7 @@ class Program extends Controller
     {
         //host数组可配置多个节点
         $params = array(
-            '127.0.0.1:9200'
+            '39.106.20.103:9200'
         );
         $this->es = \Elasticsearch\ClientBuilder::create()->setHosts($params)->build();
     }
@@ -32,7 +32,7 @@ class Program extends Controller
     {
         header('Access-Control-Allow-Origin:*');
         header('Access-Control-Allow-Methods:GET, POST, OPTIONS');
-        $page = $this->request->request("page") ? $this->request->request("page") : "1";//分页
+        $page = $this->request->request("page") ? $this->request->request("page") : "0";//分页
         $act = $this->request->request("act") ? $this->request->request("act") : "new";//最热
         $type = $this->request->request("type") ? $this->request->request("type") : "xcx";//小程序
         $cate = $this->request->request("category") ? $this->request->request("category") : "";//小程序类别
@@ -51,10 +51,10 @@ class Program extends Controller
         if ($act == "hot") {
             $es=new Elasticsearch;
             $arr=$es->select($where,$cate,"24",$page);
-            print_r($arr);die;
+print_r($arr);die;
            // $arr = Db::table("small_program")->where("program_style=" . $where  .$cate_where)->field("id,program_title,program_subtitle,program_icon,program_audit_status")->page($page, 24)->order("program_see_num desc,release_time desc")->select();
         } elseif ($act == "new") {
-            $arr = Db::table("small_program")->where("program_style=" . $where  .$cate_where)->field("id,program_title,program_subtitle,program_icon,program_audit_status")->page($page, 24)->order("release_time desc")->select();
+            $arr = Db::table("small_program")->where("program_style=" . $where  .$cate_where)->field("id,program_title,program_subtitle,program_icon,program_audit_status")->page($page, 24)->order("id desc")->select();
         }
         $count = count($arr);
         $pagecount = ceil($count / 24);
