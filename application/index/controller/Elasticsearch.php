@@ -92,26 +92,52 @@ class Elasticsearch extends Controller
     }
 
     //查询数据
-    public function select($program_style, $cate, $page_size, $page)
+    public function select($act,$program_style, $cate, $page_size, $page=0)
     {
-        $params = [
-            'index' => 'program',
-            'type' => 'program_index',
-            'body' => [
-                'query' => [
-                    "bool" => [
-                        'filter' => [
-                            ["term" => ['program_style' => $program_style]],
-                            ["term" => ['program_audit_status' => "2"]],
-                            ["term" => ['program_category_id' => $cate]]
+        if($act=="hot"){
+            $params = [
+                'index' => 'program',
+                'type' => 'program_index',
+                'body' => [
+                    'query' => [
+                        "bool" => [
+                            'filter' => [
+                                ["term" => ['program_style' => $program_style]],
+                                ["term" => ['program_audit_status' => "2"]],
+                            ],
+                            "should"=>[
+                                ["term" => ['program_category_id' => $cate]]
+                            ]
                         ]
-                    ]
-                ],
-                "sort"=>[["program_see_num"=>["order"=>"desc"]],["id"=>["order"=>"asc"]]],
-                "from" => $page,
-                "size" => $page_size,
-            ]
-        ];
+                    ],
+                    "sort"=>[["program_see_num"=>["order"=>"desc"]],["id"=>["order"=>"asc"]]],
+                    "from" => $page,
+                    "size" => $page_size,
+                ]
+            ];
+        }elseif ($act=="new"){
+            $params = [
+                'index' => 'program',
+                'type' => 'program_index',
+                'body' => [
+                    'query' => [
+                        "bool" => [
+                            'filter' => [
+                                ["term" => ['program_style' => $program_style]],
+                                ["term" => ['program_audit_status' => "2"]],
+
+                            ],
+                            "should"=>[
+                                ["term" => ['program_category_id' => $cate]]
+                            ]
+                        ]
+                    ],
+                    "sort"=>[["id"=>["order"=>"asc"]]],
+                    "from" => $page,
+                    "size" => $page_size,
+                ]
+            ];
+        }
         $lists=[];
         $res = $this->es->search($params)['hits'];
         $lists["amount"]=$res["total"];
