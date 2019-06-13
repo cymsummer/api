@@ -19,9 +19,9 @@ class Spirde extends Controller{
         //接收数据
         $json=$this->request->post("data");//小程序信息
         $data=json_decode($json,true);
-        $zx_info=Db::table("small_program_copy")->where(['zx_id'=>$data['zx_id']])->find();//小程序信息查询
+        $zx_info=Db::table("small_program")->where(['zx_id'=>$data['zx_id']])->find();//小程序信息查询
         if(empty($zx_info)) {//数据入库
-            $InsertId = Db::table("small_program_copy")->insertGetId($data);//添加小程序
+            $InsertId = Db::table("small_program")->insertGetId($data);//添加小程序
             $tag = $this->request->post("tag");//标签信息
 
             $cate_data = [];//添加分类的数组
