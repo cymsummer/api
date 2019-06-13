@@ -17,23 +17,12 @@ use think\cache\driver\Redis;
 
 class Program extends Controller
 {
-    public $es;
-
-    public function _initialize()
-    {
-        //host数组可配置多个节点
-        $params = array(
-            '39.106.20.103:9200'
-        );
-        $this->es = \Elasticsearch\ClientBuilder::create()->setHosts($params)->build();
-    }
-
     //数据展示
     public function index()
     {
         header('Access-Control-Allow-Origin:*');
         header('Access-Control-Allow-Methods:GET, POST, OPTIONS');
-        $page = $this->request->request("page") ? $this->request->request("page") : "0";//分页
+        $page = $this->request->request("page") ? $this->request->request("page") : "1";//分页
         $act = $this->request->request("act") ? $this->request->request("act") : "new";//最热
         $type = $this->request->request("type") ? $this->request->request("type") : "xcx";//小程序
         $cate = $this->request->request("category") ? $this->request->request("category") : "";//小程序类别
@@ -42,28 +31,36 @@ class Program extends Controller
         } else {
             $where = "2";
         }
+        if (!empty($cate)) {
+            $cate_where = " and program_category_id=$cate and program_audit_status=2";
+        } else {
+            $cate_where = " and program_audit_status=2";
+        }
         $category = Db::table("small_program_category")->where("category_type", $where)->field('id,category_name')->select();
         //获取文章id
-        $es = new Elasticsearch;
-        $arr = $es->select($act, $where, $cate, "24", $page);
-        $pagecount = ceil($arr["amount"] / 24);
+        if ($act == "hot") {
+            $arr = Db::table("small_program")->where("program_style=" . $where  .$cate_where)->field("id,program_title,program_subtitle,program_icon,program_audit_status")->page($page, 24)->order("program_see_num desc,release_time desc")->select();
+        } elseif ($act == "new") {
+            $arr = Db::table("small_program")->where("program_style=" . $where  .$cate_where)->field("id,program_title,program_subtitle,program_icon,program_audit_status")->page($page, 24)->order("id desc")->select();
+        }
+        $count = count($arr);
+        $pagecount = ceil($count / 24);
         $img_url = config("img_config");
-        if (!empty($arr["data"])) {
-            foreach ($arr["data"] as $k => $v) {
+        if (!empty($arr)) {
+            foreach ($arr as $k => $v) {
                 if ($v["id"] <= 5774) {
-                    $arr["data"][$k]["program_icon"] = $img_url["src"] . $v["program_icon"];
+                    $arr[$k]["program_icon"] = $img_url["src"] . $v["program_icon"];
                 }
             }
         } else {
             $arr = array();
         }
-        unset($arr["amount"]);
         $result["msg"] = "成功！";
         $result["code"] = "1";
-        $result["data"]["page"] = $arr["current_page"];
+        $result["data"]["page"] = $page;
         $result["data"]["pagecount"] = $pagecount;
         $result["data"]["category"] = $category;
-        $result["data"]["$act"] = $arr["data"];
+        $result["data"]["$act"] = $arr;
         return $result;
     }
 
@@ -240,8 +237,8 @@ class Program extends Controller
                 $result["msg"] = "appid与appsecret认证失败";
                 $result["code"] = "-1";
                 return $result;
-            } else {
-                $arr["program_offical"] = "1";
+            }else{
+                $arr["program_offical"]="1";
             }
         }
         $label["label_name"] = $arr["program_tab_name"];//标签内容
@@ -340,9 +337,10 @@ class Program extends Controller
                 $type = $image->type();
                 //添加水印
                 //     $image->water('../public/luobo/images/logo.png', Image::WATER_SOUTHWEST, 100)->save('../public/upload/' . $new_img_name);
-                $new_img_name = $this->random(18) . "." . $type;
+                $new_img_name =$this->random(18) . "." . $type;
                 $image->save($config["__ROOT__"] . '/' . $new_img_name);
                 $data["image_url"] = $config["src"] . "/" . $new_img_name;
+                $data["type"] = "1";
                 Db::connect("db_config1")->table("luobo_image")->insert($data);
                 if ($img_count == 1) {
                     $img .= $data["image_url"];
@@ -557,11 +555,11 @@ class Program extends Controller
     //存储redis
     public function set()
     {
-        $redis = new Redis();
-        $id = $this->request->request("id");
+        $redis=new Redis();
+        $id=$this->request->request("id");
         $arr = Db::table("small_program")->where('id', $id)->find();//查询文章信息
-        $label_arr = Db::table("small_program_label")->where("label_id", $arr["program_tab_id"])->find();//查询标签信息
-        $arr["program_tab_name"] = $label_arr["label_name"];//获取标签信息
+        $label_arr=Db::table("small_program_label")->where("label_id",$arr["program_tab_id"])->find();//查询标签信息
+        $arr["program_tab_name"]=$label_arr["label_name"];//获取标签信息
         $redis->hMset("wz_detail:" . $id, $arr);//存储文章详情
         $redis->set("wz_detail_key", array_keys($arr));//存储文章详情key
         print_r($redis->get("wz_detail_key"));//获取key

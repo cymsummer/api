@@ -37,10 +37,10 @@ Route::rule('rmtoken','index/Auth/deltoken');
 //=============清除缓存===========
 Route::get('clear','index/Clear/index');
 
+//爬取请求数据添加
+Route::rule('zx_spirde','index/Spirde/zhixiao');
 
-//============elasticsearch=============
-Route::get('es_create',"index/Elasticsearch/create");
-Route::get('es_insert',"index/Elasticsearch/insert");
-Route::get('es_select',"index/Elasticsearch/select");
-Route::get('es_delete',"index/Elasticsearch/delete");
+//=====获取redis
+Route::rule('redis_get','index/Ini/index');
+Route::rule('redis_set','index/Ini/set');
 

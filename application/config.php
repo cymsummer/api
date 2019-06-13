@@ -168,9 +168,11 @@ return [
         // 日志记录方式，内置 file socket 支持扩展
         'type' => 'File',
         // 日志保存目录
-        'path' => LOG_PATH,
+        'path' => APP_PATH.'logs/',
         // 日志记录级别
-        'level' => [],
+        'level' => ['error','sql'],
+        //最多存储30天的记录
+        'max_files'	=> 30
     ],
 
     // +----------------------------------------------------------------------
@@ -242,28 +244,28 @@ return [
     //数据库配置1
     'db_config1' => [
         // 数据库类型
-        'type' => 'mysql',
+        'type'        => 'mysql',
         // 服务器地址
-        'hostname' => '127.0.0.1',
+        'hostname'    => '39.106.20.103',
         // 数据库名
-        'database' => 'luoborijian',
+        'database'    => 'luoborijian',
         // 数据库用户名
-        'username' => 'root',
+        'username'    => 'root',
         // 数据库密码
-        'password' => '',
+        'password'    => 'cym@0908',
         // 数据库编码默认采用utf8
-        'charset' => 'utf8',
+        'charset'     => 'utf8',
         // 数据库表前缀
-        'prefix' => 'luobo_',
+        'prefix'      => 'luobo_',
     ],
     //微信授权配置
     'auth_config' => [
-        "appid" => "wxa687dbd4a819cfd9",
-        "appsecret" => "a36c744fbe1247c41726e60478141644",
+        "appid" => "wx62ac8b0be1bda4ca",
+        "appsecret" => "d6494e2a83057440b3c4fc11c6b0ea6d",
     ],
     //图片路径
     'img_config' => [
-        "src" =>"https://www.rwcym.top/upload",
+        "src" =>"https://admin.loobo.top/upload",
         '__ROOT__' => IMAGE_PATH,
     ]
 ];
