@@ -18,6 +18,9 @@ class Spirde extends Controller{
     public function zhixiao(){
         //接收数据
         $json=$this->request->post("data");//小程序信息
+        if(empty($json)){
+            return json_encode(['code'=>'-2','msg'=>"请求数据有问题！"]);
+        }
         $data=json_decode($json,true);
         $zx_info=Db::table("small_program")->where(['zx_id'=>$data['zx_id']])->find();//小程序信息查询
         if(empty($zx_info)) {//数据入库
