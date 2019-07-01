@@ -47,4 +47,31 @@ class Info extends Model
         }
         return $arr;
     }
+
+
+    //获取文章详情
+    public static function ArticleDetail($id, $act = "none")
+    {
+        $redis = new Redis();
+        if ($act == "special") {
+            $arr = Db::table("small_program")->where('id', $id)->field("id,program_title,program_icon,program_tab_id")->find();
+            $label_arr=Db::table("small_program_label")->where("label_id",$arr["program_tab_id"])->find();
+            $arr["program_tab_name"]=$label_arr["label_name"];
+            $redis->hMset("wz_cover_detail:" . $id, $arr);
+        } else {
+            $arr = Db::table("small_program")->where('id', $id)->find();
+            if ($arr["id"] <= 5774) {
+                $new_arr = explode("，", $arr["program_pic"]);
+                unset($new_arr[count($new_arr) - 1]);
+                $arr["program_pic"] = "";
+                foreach ($new_arr as $key => $val) {
+                    $arr["program_pic"] .=  $val . "，";
+                }
+            }
+            $label_arr=Db::table("small_program_label")->where("label_id",$arr["program_tab_id"])->find();
+            $arr["program_tab_name"]=$label_arr["label_name"];
+            $redis->hMset("wz_detail:" . $id, $arr);
+        }
+        return $arr;
+    }
 }

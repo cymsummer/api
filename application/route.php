@@ -16,8 +16,13 @@ Route::rule('recommendcomment','index/Recommend/comment');
 
 
 //==========小程序、小游戏==========
-Route::rule('program','index/Program/index');
-Route::rule('programinfo','index/Program/detail');
+//Route::rule('program','index/Program/index');
+Route::rule('program','index/Program/proShow');
+//Route::rule('programinfo','index/Program/detail');
+Route::rule('programinfo','index/Program/ProDetail');
+
+
+
 Route::rule('about','index/Program/about');
 Route::rule('score','index/Program/score');
 Route::rule('insert','index/Program/insert');

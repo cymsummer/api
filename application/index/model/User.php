@@ -22,4 +22,15 @@ class User extends Model{
         }
         return $openid_info;
     }
+
+    //获取用户信息
+    public static function getUserInfo($openid){
+        $redis = new Redis();
+        $openid_info=$redis->hGetAll("openid_".$openid);
+        if(empty($openid_info)){
+            $openid_info=Db::table("small_program_user")->where("user_program_id",$openid)->find();
+            $redis->hMset("openid_".$openid,$openid_info);
+        }
+        return $openid_info;
+    }
 }

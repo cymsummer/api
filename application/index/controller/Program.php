@@ -57,6 +57,87 @@ class Program extends Controller
         return $result;
     }
 
+    //分类数据
+    public function cate_show($type){
+        if ($type == "xcx") {
+            $where = "1";
+        } else {
+            $where = "2";
+        }
+        $category = Db::table("small_program_category")->where("category_type", $where)->field('id,category_name')->select();
+        return $category;
+    }
+
+    //数据查询
+    public function proShow(){
+        header('Access-Control-Allow-Origin:*');
+        header('Access-Control-Allow-Methods:GET, POST, OPTIONS');
+        $page = $this->request->request("page") ? $this->request->request("page") : "1";//分页
+        $act = $this->request->request("act") ? $this->request->request("act") : "new";//最热
+        $type = $this->request->request("type") ? $this->request->request("type") : "xcx";//小程序
+        $cate = $this->request->request("category") ? $this->request->request("category") : "";//小程序类别
+        if (!empty($cate)) {//有分类查询
+            $where=" a.program_audit_status=1 and b.category_id=$cate ";
+        }else{//默认查询已经审核通过数据
+            $where=" program_audit_status=1";
+        }
+        if ($type == "xcx") {//请求来源是小程序
+            if(!empty($where)){
+                $where.=" and ";
+            }
+            if(!empty($cate)){
+                $where .= " a.program_style=1 ";
+            }else{
+                $where .= " program_style=1 ";
+            }
+        } else {//请求来源为小游戏
+            if(!empty($where)){
+                $where.=" and ";
+            }
+            if(!empty($cate)){
+                $where .= " a.program_style=2 ";
+            }else{
+                $where .= " program_style=2 ";
+            }
+        }
+
+        if ($act == "hot") {//热门顺序
+            if(!empty($cate)){
+                $order = "a.program_see_num desc,a.release_time desc ";
+            }else{
+                $order="program_see_num desc,release_time desc";
+            }
+        } elseif ($act == "new") {//最新排序
+            if(!empty($cate)){
+                $order = "a.id desc";
+            }else{
+                $order="id desc";
+            }
+        }
+        if (!empty($cate)) {//有分类的时候连表查询
+            $sql = "select * from small_program as a inner join small_pro_cate as b on a.id=b.program_id where $where order by $order limit $page,24";
+            $count_sql="select count(1) as total from small_program as a inner join small_pro_cate as b on a.id=b.program_id where $where order by $order";
+        }else{//全部数据
+            $sql = "select * from small_program where $where order by $order limit $page,24";
+            $count_sql="select count(1) as total from small_program where $where order by $order ";
+        }
+        $arr=Db::query($sql);
+        $count=Db::query($count_sql);
+        $pagecount = ceil($count[0]['total'] / 24);
+        if (empty($arr)) {
+            $arr=[];
+        }
+        //分类
+        $category=$this->cate_show($type);
+        $result["msg"] = "成功！";
+        $result["code"] = "1";
+        $result["data"]["page"] = $page;
+        $result["data"]["pagecount"] = $pagecount;
+        $result["data"]["category"] = $category;
+        $result["data"]["$act"] = $arr;
+        return $result;
+    }
+
 
     //数据详情
     public function detail()
@@ -139,6 +220,83 @@ class Program extends Controller
         return $result;
     }
 
+    public function ProDetail()
+    {
+        header('Access-Control-Allow-Origin:*');
+        header('Access-Control-Allow-Methods:GET, POST, OPTIONS');
+        $redis = new Redis();
+        $id = $this->request->request("id");//小程序id
+        $page = $this->request->request("page") ? $this->request->request("page") : "1";//页码
+        $act = $this->request->request("act");//类型
+        $num = $this->request->request("score"); //分数
+        $source = $this->request->request("source"); //来源
+        $ip = $this->request->request("ip"); //ip
+        $openid = $this->request->request("user_program_id");
+        $result["data"]["user_info"] = User::getUserInfo($openid);
+        if (empty($id)) {
+            $result["msg"] = "缺少id";
+            $result["code"] = "-1";
+            $result["data"] = "";
+            return $result;
+        }
+        //浏览量加1
+        Db::table('small_program')->where('id', $id)->setInc('program_see_num');
+        $arr = $redis->hGetAll("wz_detail:" . $id);
+        if (empty($arr["id"])) {
+            $arr = Info::ArticleDetail($id);
+        }
+        //评论内容
+        $comment = Db::table('small_program_comment')->where("comment_id=:comment_id and comment_state!=:comment_state")->bind(['comment_id' => $arr["program_comment_id"], 'comment_state' => '1'])->order("publish_time desc")->page($page, 20)->select();
+        foreach ($comment as $k => $v) {
+            $comment[$k]["userinfo"][] = Db::table('small_program_user')->where("user_program_id", $v["comment_user_id"])->find();
+        }
+        //评分添加
+        if (!empty($act) && $act == "add") {
+            $data = array();
+            $data["score_num"] = $num;
+            $data["score_id"] = $id;
+            $data["score_source"] = $source;
+            $data["score_ip"] = $ip;
+            Db::table("small_program_score")->insert($data);
+        }
+        $score["count"] = (string)Db::table("small_program_score")->where("score_id=$id")->count();
+        $score["avg"] = (string)Db::table("small_program_score")->where("score_id=$id")->avg("score_num");
+        $score["avg"] = sprintf("%.1f", $score["avg"]);
+        //相关推荐
+        if (empty($arr["program_title"])) {
+            $result["msg"] = "缺少小程序标题";
+            $result["code"] = "-1";
+            $result["data"] = "";
+            return $result;
+        }
+        $title = $arr["program_title"];
+//        $about1 = Db::table("small_program_label")->where("label_name", "like", "%" . $arr["program_title"] . "%")->select();
+        $about1 = Db::query("select id,label_name from small_program_label where  LOCATE('$title', 'label_name')");//根据标签推荐 索引
+        if ($about1) {
+            foreach ($about1 as $v) {
+                $about_arr[] = Info::index($v["id"], "special");
+            }
+        } else {
+            $about2 = Db::query("select id,program_title from small_program where  LOCATE('$title', 'program_title')");//根据标题推荐 索引
+//            $about2 = Db::table("small_program")->where("program_title", "like", "%" . $arr["program_title"])->select();
+            if ($about2 && ($about2[0]["program_title"] != $arr["program_title"])) {
+                foreach ($about2 as $v) {
+                    $about_arr[] = Info::ArticleDetail($v["id"], "special");
+                }
+            } else {
+                $about_arr = $this->getRandTable($arr["program_category_id"]);//随机推荐
+            }
+        }
+        $result["msg"] = "成功！";
+        $result["code"] = "1";
+        $result["data"] = $arr;
+        $result["data"]["comment"] = $comment;
+        $result["data"]["score"] = $score;
+        $result["data"]["about"] = $about_arr;
+
+        return $result;
+    }
+
     /*
      * 随机获取数据
      * */
@@ -158,6 +316,7 @@ class Program extends Controller
         $i = 1;
         $flag = 0;
         $ary = array();
+
         while ($i <= $num) {
             $rundnum = rand($min, $countcus);//抽取随机数
             if ($flag != $rundnum) {
@@ -171,9 +330,10 @@ class Program extends Controller
                 $i++;
             }
         }
+        $list=[];
         for ($i = 0; $i < count($ary); $i++) {
 //            $list[] = Db::table("small_program")->where('id', $ary[$i])->find();
-            $list[] = Info::index($ary[$i], "special");
+            $list[] = Info::ArticleDetail($ary[$i], "special");
         }
 //        print_r($list);die;
         return $list;
