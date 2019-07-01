@@ -81,6 +81,7 @@ class Program extends Controller
         }else{//默认查询已经审核通过数据
             $where=" program_audit_status=2";
         }
+        
         if ($type == "xcx") {//请求来源是小程序
             if(!empty($where)){
                 $where.=" and ";
