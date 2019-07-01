@@ -121,6 +121,7 @@ class Program extends Controller
             $sql = "select * from small_program where $where order by $order limit $page,24";
             $count_sql="select count(1) as total from small_program where $where order by $order ";
         }
+        echo $sql;die;
         $arr=Db::query($sql);
         $count=Db::query($count_sql);
         $pagecount = ceil($count[0]['total'] / 24);
@@ -242,7 +243,7 @@ class Program extends Controller
         //浏览量加1
         Db::table('small_program')->where('id', $id)->setInc('program_see_num');
         $arr = $redis->hGetAll("wz_detail:" . $id);
-        if (empty($arr["id"])) {
+        if (!empty($arr["id"])) {
             $arr = Info::ArticleDetail($id);
         }
         //评论内容
@@ -274,7 +275,7 @@ class Program extends Controller
         $about1 = Db::query("select id,label_name from small_program_label where  LOCATE('$title', 'label_name')");//根据标签推荐 索引
         if ($about1) {
             foreach ($about1 as $v) {
-                $about_arr[] = Info::index($v["id"], "special");
+                $about_arr[] = Info::ArticleDetail($v["id"], "special");
             }
         } else {
             $about2 = Db::query("select id,program_title from small_program where  LOCATE('$title', 'program_title')");//根据标题推荐 索引
@@ -284,7 +285,12 @@ class Program extends Controller
                     $about_arr[] = Info::ArticleDetail($v["id"], "special");
                 }
             } else {
-                $about_arr = $this->getRandTable($arr["program_category_id"]);//随机推荐
+                //获取该分类id
+                $catproinfo=Db::table('small_pro_cate')->where('program_id',$id)->find();
+                $about_arr = $this->getRandTable($catproinfo['category_id']);//随机推荐
+                if(empty($about_arr)){
+                    $about_arr=[];
+                }
             }
         }
         $result["msg"] = "成功！";
@@ -303,11 +309,11 @@ class Program extends Controller
     public function getRandTable($cate_id)
     {
         $num = 7;    //需要抽取的默认条数
-        $table = 'program';    //需要抽取的数据表
+        $table = 'pro_cate';    //需要抽取的数据表
         $cate_arr = explode(",", $cate_id);
         $countcus = "";
         for ($i = 0; $i < count($cate_arr); $i++) {
-            $countcus += Db::name($table)->where("program_category_id", $cate_arr[$i])->count();    //获取总记录数
+            $countcus .= Db::name($table)->where("category_id", $cate_arr[$i])->count();    //获取总记录数
         }
         $min = Db::name($table)->min('id');    //统计某个字段最小数据
         if ($countcus < $num) {
