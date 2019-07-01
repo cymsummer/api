@@ -121,7 +121,6 @@ class Program extends Controller
             $sql = "select * from small_program where $where order by $order limit $page,24";
             $count_sql="select count(1) as total from small_program where $where order by $order ";
         }
-        echo $sql;die;
         $arr=Db::query($sql);
         $count=Db::query($count_sql);
         $pagecount = ceil($count[0]['total'] / 24);
