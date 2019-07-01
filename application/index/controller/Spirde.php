@@ -26,7 +26,6 @@ class Spirde extends Controller{
         if(empty($zx_info)) {//数据入库
             $InsertId = Db::table("small_program")->insertGetId($data);//添加小程序
             $tag = $this->request->post("tag");//标签信息
-
             $cate_data = [];//添加分类的数组
             $cate_data['program_id'] = $InsertId;//小程序id
             $cate_data['program_type'] = $data['program_style'];//小程序类型
@@ -42,7 +41,7 @@ class Spirde extends Controller{
                 Log::write($json, 'error');
                 return json_encode(['code' => "-1", 'msg' => '错误！', 'data' => $json]);
             } else {
-                Log::write($json, 'info');
+                Log::write($data, 'info');
                 return json_encode(['code' => '1', 'msg' => '成功！']);
             }
         }
@@ -59,5 +58,8 @@ class Spirde extends Controller{
             }
         }
     }
+
+
+
 
 }

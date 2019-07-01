@@ -45,15 +45,8 @@ class Program extends Controller
         }
         $count = count($arr);
         $pagecount = ceil($count / 24);
-        $img_url = config("img_config");
-        if (!empty($arr)) {
-//            foreach ($arr as $k => $v) {
-//                if ($v["id"] <= 5774) {
-//                    $arr[$k]["program_icon"] = $img_url["src"] . $v["program_icon"];
-//                }
-//            }
-        } else {
-            $arr = array();
+        if (empty($arr)) {
+            $arr=[];
         }
         $result["msg"] = "成功！";
         $result["code"] = "1";

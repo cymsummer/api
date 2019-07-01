@@ -36,7 +36,7 @@ class Program extends Controller
         } else {
             $cate_where = "";
         }
-        $category = Db::table("small_program_category")->where("category_type", $where)->field('id,category_name')->select();
+        $category = Db::table("small_program_category")->where("category_type", $where)->field('id,category_name')->select();//查询分类信息
         //获取文章id
         $cate_arr = Db::table("small_pro_cate")->distinct(true)->field("program_id,publish_time")->where("program_type=$where $cate_where")->page($page, 24)->order("publish_time desc")->select();
         if ($act == "hot") {
@@ -52,17 +52,7 @@ class Program extends Controller
         }
         $count = count($cate_arr);
         $pagecount = ceil($count / 24);
-        $img_url = config("img_config");
-        if (!empty($arr)) {
-            foreach ($arr as $k => $v) {
-                if ($v["id"] <= 5774) {
-                    $arr[$k]["program_icon"] = $img_url["src"] . $v["program_icon"];
-                }
-                if ($v["program_audit_status"] == "0" || $v["program_audit_status"] == "1") {
-                    unset($arr[$k]);
-                }
-            }
-        } else {
+        if (empty($arr)) {
             $arr = array();
         }
         $arr=array_values($arr);
