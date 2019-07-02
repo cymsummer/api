@@ -24,6 +24,8 @@ class Spirde extends Controller{
         $data=json_decode($json,true);
         $zx_info=Db::table("small_program")->where(['zx_id'=>$data['zx_id']])->find();//小程序信息查询
         if(empty($zx_info)) {//数据入库
+            $data['create_time']=time();
+            $data['release_time']=time();
             $InsertId = Db::table("small_program")->insertGetId($data);//添加小程序
             $tag = $this->request->post("tag");//标签信息
             $cate_data = [];//添加分类的数组
