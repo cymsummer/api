@@ -243,11 +243,13 @@ class Program extends Controller
 
         //浏览量加1
         Db::table('small_program')->where('id', $id)->setInc('program_see_num');
-
+        
         $arr = $redis->hGetAll("pro_detail:" . $id);
-        if (empty($arr)) {//获取详情信息
+
+        if (!empty($arr)) {//获取详情信息
             $arr = Info::ArticleDetail($id);
         }
+
         //评论内容
         $comment=Info::GetPl($id,$page);
         //评分添加

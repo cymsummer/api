@@ -55,15 +55,27 @@ class Info extends Model
         $redis = new Redis();
         //单表查询
         $arr=Db::table('small_program')->where("id",$id)->find();
+        $cate_arr=self::ProCate($id);
+        if(!empty($cate_arr)){
+            for($i=0;$i<count($cate_arr);$i++){
+                $arr['program_category_id'].=$cate_arr[$i]['category_id'].",";
+            }
+            $arr['program_category_id']=trim($arr['program_category_id'],',');
+        }
         if(!empty($arr)){
             $redis->hMset("pro_detail:".$arr['id'],$arr);
+        }else{
+            $arr=[];
         }
         return $arr;
     }
 
     //获取分类信息
     public static function ProCate($id){
-        $arr=Db::table('small_pro_cate')->where("id",$id)->select();
+        $arr=Db::table('small_pro_cate')->where("program_id",$id)->select();
+        if(empty($arr)){
+            $arr=[];
+        }
         return $arr;
     }
 
