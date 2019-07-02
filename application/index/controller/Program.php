@@ -81,7 +81,7 @@ class Program extends Controller
         }else{//默认查询已经审核通过数据
             $where=" program_audit_status=2";
         }
-        
+
         if ($type == "xcx") {//请求来源是小程序
             if(!empty($where)){
                 $where.=" and ";
@@ -240,22 +240,22 @@ class Program extends Controller
             $result["data"] = "";
             return $result;
         }
+
         //浏览量加1
         Db::table('small_program')->where('id', $id)->setInc('program_see_num');
-        $arr = $redis->hGetAll("wz_detail:" . $id);
-        if (!empty($arr["id"])) {
+
+        $arr = $redis->hGetAll("pro_detail:" . $id);
+        if (empty($arr)) {//获取详情信息
             $arr = Info::ArticleDetail($id);
         }
         //评论内容
-        $comment = Db::table('small_program_comment')->where("comment_id=:comment_id and comment_state!=:comment_state")->bind(['comment_id' => $arr["program_comment_id"], 'comment_state' => '1'])->order("publish_time desc")->page($page, 20)->select();
-        foreach ($comment as $k => $v) {
-            $comment[$k]["userinfo"][] = Db::table('small_program_user')->where("user_program_id", $v["comment_user_id"])->find();
-        }
+        $comment=Info::GetPl($id,$page);
         //评分添加
         if (!empty($act) && $act == "add") {
             $data = array();
             $data["score_num"] = $num;
             $data["score_id"] = $id;
+            $data["program_id"] = $id;
             $data["score_source"] = $source;
             $data["score_ip"] = $ip;
             Db::table("small_program_score")->insert($data);
@@ -263,6 +263,7 @@ class Program extends Controller
         $score["count"] = (string)Db::table("small_program_score")->where("score_id=$id")->count();
         $score["avg"] = (string)Db::table("small_program_score")->where("score_id=$id")->avg("score_num");
         $score["avg"] = sprintf("%.1f", $score["avg"]);
+
         //相关推荐
         if (empty($arr["program_title"])) {
             $result["msg"] = "缺少小程序标题";
